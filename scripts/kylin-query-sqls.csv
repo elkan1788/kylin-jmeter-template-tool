@@ -1,0 +1,6 @@
+﻿query_no,is_complex,query_sql
+01,n,"SELECT COUNT(*) FROM kylin_sales WHERE part_dt BETWEEN '2012-01-01' AND '2012-01-02'"
+02,n,"SELECT part_dt, COUNT(*) FROM kylin_sales WHERE part_dt BETWEEN '2012-01-01' AND '2012-02-01' GROUP BY part_dt"
+03,n,"SELECT OPS_USER_ID, COUNT(*) FROM kylin_sales WHERE part_dt BETWEEN '2012-01-01' AND '2012-02-01' GROUP BY OPS_USER_ID"
+04,y,"SELECT part_dt,OPS_USER_ID,OPS_REGION,ITEM_COUNT,PRICE FROM kylin_sales WHERE part_dt BETWEEN '2012-02-01' AND '2012-03-01'"
+05,y,"ELECT lstg_format_name, SUM(price) AS gmv, COUNT(DISTINCT seller_id) AS dist_seller FROM kylin_sales WHERE lstg_format_name='FP-GTC' GROUP BY lstg_format_name HAVING COUNT(DISTINCT seller_id) > 50"
