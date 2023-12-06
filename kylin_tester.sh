@@ -145,7 +145,7 @@ function parseArgs() {
     b)
       DEBUG_ON=$OPTARG
       ;;
-    s)
+    w)
       if [ "$OPTARG" == "start" ] && [ ! -f $REPORT_SERVER_PID ]; then
         webServer
       elif [ "$OPTARG" == "start" ] && [ -f $REPORT_SERVER_PID ]; then
@@ -286,7 +286,7 @@ function webServer() {
   local PID=$!
   echo "$PID" > $REPORT_SERVER_PID
   echo -e "测试报告的WEB服务\033[32m已启动成功\033[0m，进程ID为：$PID"
-  echo "请打开浏览器访问: http://$HOST_IP:$REPORT_SERVER_PORT/"
+  echo "请打开浏览器访问: http://$REPORT_SERVER_IP:$REPORT_SERVER_PORT/"
 }
 
 # 提交测试任务
@@ -320,7 +320,7 @@ function start() {
   fi
   
   echo -e "\033[32m测试任务已完成\033[0m"
-  echo "请打开查看测试报告：http://${REPORT_SERVER_IP}:${REPORT_SERVER_PORT}/${REPORT_OUTPUT_DIR}/index.html"
+  echo "请打开查看测试报告：http://${REPORT_SERVER_IP}:${REPORT_SERVER_PORT}/${REPORT_OUTPUT_NAME}/index.html"
 
 }
 
