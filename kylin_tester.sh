@@ -1,6 +1,6 @@
 #!/bin/bash
 # 
-# 执行KE查询请求自动化测试的脚本
+# 执行Kylin查询请求自动化测试的脚本
 #
 # Author: 凡梦星尘 | elkan1788@139.com
 # Date: 2023-11-25
@@ -24,7 +24,7 @@ DURATION_TIME=60
 COMPLEX_RATION=10
 DEBUG_ON="false"
 
-# KE 参数配置
+# Kylin 参数配置
 DEF_CONF_FILE="conf.ini"
 CONF_FILE=$DEF_CONF_FILE
 PROTOCOL="http"
@@ -182,13 +182,13 @@ function parseArgs() {
 function checkArgs() {
 
   if [ $CONF_FILE!=$DEF_CONF_FILE ] && [ ! -f $CONF_FILE ]; then
-    echo "提示：请检查KE配置参数文件是否正确!!!"
-    echo -e "      当前KE配置参数文件路径为：\033[31m$CONF_FILE\033[0m" && exit 1
+    echo "提示：请检查Kylin配置参数文件是否正确!!!"
+    echo -e "      当前Kylin配置参数文件路径为：\033[31m$CONF_FILE\033[0m" && exit 1
   fi
 
   if [ $SQL_CSV_FILE!=$DEF_SQL_CSV_FILE ] && [ ! -f $SQL_CSV_FILE ]; then
-    echo "提示：请检查KE查询SQL文件是否正确!!!"
-    echo -e "      当前KE查询SQL文件路径为：\033[31m$SQL_CSV_FILE\033[0m" && exit 1
+    echo "提示：请检查SQL文件路径是否正确!!!"
+    echo -e "      当前查询SQL文件路径为：\033[31m$SQL_CSV_FILE\033[0m" && exit 1
   fi
 
   if [ $JMETER_SCRIPT!=$DEF_JMETER_SCRIPT ] && [ ! -f $JMETER_SCRIPT ]; then
@@ -218,8 +218,8 @@ function checkArgs() {
     echo "      记录为：$REPORT_OUTPUT_JTL"  && exit 1
   fi
 
-  echo "KE参数配置为：$CONF_FILE"
-  echo "KE查询语句为：$SQL_CSV_FILE"
+  echo " Kylin配置为：$CONF_FILE"
+  echo "   SQL文件为：$SQL_CSV_FILE"
   echo "测试的脚本为：$JMETER_SCRIPT"
   echo "测试报告输出：$REPORT_OUTPUT_DIR"
   echo "测试日志文件：$REPORT_OUTPUT_LOG"
