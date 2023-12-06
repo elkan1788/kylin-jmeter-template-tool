@@ -284,7 +284,7 @@ function webServer() {
   nohup python -m SimpleHTTPServer $REPORT_SERVER_PORT > /dev/null 2>&1 &
   
   local PID=$!
-  echo "$PID" > $REPORT_SERVER_PID
+  echo "$PID" > ../$REPORT_SERVER_PID
   echo -e "测试报告的WEB服务\033[32m已启动成功\033[0m，进程ID为：$PID"
   echo "请打开浏览器访问: http://$REPORT_SERVER_IP:$REPORT_SERVER_PORT/"
 }
