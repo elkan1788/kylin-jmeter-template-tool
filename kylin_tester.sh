@@ -74,39 +74,24 @@ function help() {
 
 # 获取参数值
 function getProps() {
-  while IFS=":" read -r key value; do  
-    case $key in  
-      protocol)  
-        PROTOCOL=$value  
-        ;;
-      kylin_host)  
-        KYLIN_HOST=$value  
-        ;;
-      kylin_port)  
-        KYLIN_PORT=$value  
-        ;;
-      kylin_user)  
-        KYLIN_USER=$value  
-        ;;
-      kylin_pswd)  
-        KYLIN_PSWD=$value  
-        ;;
-      kylin_proj)
-        KYLIN_PROJ=$value
-        ;;
-      limit_min)
-        LIMIT_MIN=$value
-        ;;
-      limit_max)
-        LIMIT_MAX=$value
-        ;;
-      server_port)
-        REPORT_SERVER_PORT=$value
-        ;;
-      *)
-        echo -e "\033[31m未知参数配置：$key=$value \033[0m"
-        ;;
-    esac  
+ 
+  while IFS= read -r line; do
+    line=$(echo "$line" | sed 's/^[ \t]*//;s/[ \t]*$//')
+    # 跳过以#号开头的注释和空行
+    if [[ "$line" =~ ^\# ]] || [ -z "$line" ]; then
+        continue
+    fi
+
+    # 提取配置项和值
+    key=$(echo "$line" | cut -d '=' -f 1)
+    value=$(echo "$line" | cut -d '=' -f 2-)
+
+    # 移除空白字符
+    key=$(echo "$key" | sed 's/^[ \t]*//;s/[ \t]*$//' | tr 'a-z' 'A-Z')
+    value=$(echo "$value" | sed 's/^[ \t]*//;s/[ \t]*$//')
+
+    # 使用 declare 命令创建全局变量
+    declare -g "$key=$value"
   done < "$CONF_FILE"
 }
 
