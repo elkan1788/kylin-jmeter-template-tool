@@ -79,7 +79,7 @@ function getProps() {
     line=$(echo "$line" | sed 's/^[ \t]*//;s/[ \t]*$//')
     # 跳过以#号开头的注释和空行
     if [[ "$line" =~ ^\# ]] || [ -z "$line" ]; then
-        continue
+      continue
     fi
 
     # 提取配置项和值
