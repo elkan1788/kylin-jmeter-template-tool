@@ -15,7 +15,7 @@ USERS=1
 RAMP_TIME=5
 LOOP_COUNT=-1
 DURATION_TIME=30
-COMPLEX_RATION=10
+COMPLEX_RATION=100
 DEBUG_ON="false"
 
 # Kylin 参数配置
@@ -61,7 +61,7 @@ if [ ! -f $JMETER_BIN ]; then
 fi
 
 # 检查工具是否已安装
-NEED_TOOLS=("ps" "java" "netstat" "hostname")
+NEED_TOOLS=("ps" "java" "netstat" "hostname" "wc")
 
 for tool in "${NEED_TOOLS[@]}"; do
   if ! command -v $tool &> /dev/null; then
@@ -99,7 +99,7 @@ function help() {
   echo "  -l   测试轮循次数，默认为-1，表示使用持续时间方式"
   echo "  -r   并发测试用户唤起时间，单位：秒，默认为5秒"
   echo "  -d   并发测试的持续时间，单位：秒，默认为30秒"
-  echo "  -c   复杂SQL执行比例（0-100），默认为10"
+  echo "  -c   复杂SQL执行比例（0-100），默认为100"
   echo "  -b   是否开启Debug模式，默认为false"
   echo "  -e   用Base64加密认证信息，用:号隔开用户与密码"
   echo "  -w   启停简易WEB服务，可选操作：start|stop"
@@ -191,7 +191,15 @@ function checkArgs() {
     echo -e "提示：请检查JMeter测试结果输出名称是否已存在!!!"
     echo -e "      路径为：\033[31m $REPORT_OUTPUT_DIR \033[0m" 
     echo -e "      日志为：\033[31m $REPORT_OUTPUT_LOG \033[0m" 
-    echo -e "      记录为：\033[31m $REPORT_OUTPUT_JTL \033[0m"  && exit 1
+    echo -e "      记录为：\033[31m $REPORT_OUTPUT_JTL \033[0m"  
+    exit 1
+  fi
+
+  # 检查循环次数的有效值
+  if [ "$LOOP_COUNT" -eq 0 ] || [ "$LOOP_COUNT" -lt -1 ]; then
+    echo -e "提示：循环次数不能设置为0或是负数，请检查!!!"
+    echo -e "      当前轮循次数为：\033[31m $LOOP_COUNT \033[0m" && exit 1
+    exit 1
   fi
 
   echo -e " Kylin配置为：\033[36m $CONF_FILE \033[0m"
@@ -200,7 +208,6 @@ function checkArgs() {
   echo -e "测试报告输出：\033[36m $REPORT_OUTPUT_DIR \033[0m"
   echo -e "测试日志文件：\033[36m $REPORT_OUTPUT_LOG \033[0m"
   echo -e "测试记录文件：\033[36m $REPORT_OUTPUT_JTL \033[0m"
-
 }
 
 # 替换JMeter的设置
@@ -228,6 +235,15 @@ function replaceSets() {
   else
     echo "循环次数为：$LOOP_COUNT"
     sed -i '/<boolProp name="ThreadGroup.scheduler">true<\/boolProp>/s/true/false/g' $JMETER_SCRIPT
+
+    # 只有启用循环次数时，才去获取测试SQL文件内容的行数
+    sed -i -e '$a\' $SQL_CSV_FILE
+    QUERY_SQLS=$(awk 'NR>1' "$SQL_CSV_FILE" | wc -l)
+    if [ $? -ne 0 ]; then
+      echo -e "\033[31m无法获取 $SQL_CSV_FILE 中测试SQL语句条数，请检查文件内容是否为空或有可读权限。\033[0m"
+      exit 1
+    fi
+    LOOP_COUNT=$((LOOP_COUNT * QUERY_SQLS))
   fi
 
 }
@@ -286,9 +302,27 @@ function start() {
 
 }
 
-# 获取Kylin参数值
+# 获取参数值
 function getProps() {
+  # 定义 trim 函数
+  function trim() {
+    local var="$1"
+    # 去除左边的空格
+    var="${var#"${var%%[![:space:]]*}"}"
+    # 去除右边的空格
+    var="${var%"${var##*[![:space:]]}"}"
+    echo "$var"
+  }
+
   while IFS=":" read -r key value; do  
+    # 跳过空行和注释行
+    if [[ -z "$key" || "$key" =~ ^# ]]; then
+      continue
+    fi
+
+    # 去除变量值左右两边的空格
+    value=$(trim "$value")
+
     case $key in  
       protocol)  
         PROTOCOL=$value  
@@ -305,8 +339,32 @@ function getProps() {
       kylin_pswd)  
         KYLIN_PSWD=$value  
         ;;
-      kylin_proj)
-        KYLIN_PROJ=$value
+      kylin_proj)  
+        KYLIN_PROJ=$value  
+        ;;
+      jmeter_script)
+        JMETER_SCRIPT=$value
+        ;;
+      sql_csv_file)
+        SQL_CSV_FILE=$value
+        ;;
+      debug_mode)
+        DEBUG_ON=$value
+        ;;
+      mock_users)
+        USERS=$value
+        ;;
+      ramp_time)
+        RAMP_TIME=$value
+        ;;
+      loop_count)
+        LOOP_COUNT=$value
+        ;;
+      duration_time)
+        DURATION_TIME=$value
+        ;;
+      complex_ratio)
+        COMPLEX_RATION=$value
         ;;
       limit_min)
         LIMIT_MIN=$value
@@ -395,11 +453,11 @@ function parseArgs() {
 function main() {
 
   checkEnv
+  getProps
   
   parseArgs "$@"
 
   checkArgs
-  getProps
   encryptB64
   replaceSets
   start

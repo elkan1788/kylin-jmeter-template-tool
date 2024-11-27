@@ -1,4 +1,4 @@
-﻿query_no,is_complex,query_sql
+query_no,is_complex,query_sql
 01,n,"SELECT COUNT(*) FROM kylin_sales WHERE part_dt BETWEEN '2012-01-01' AND '2012-01-02'"
 02,n,"SELECT part_dt, COUNT(*) FROM kylin_sales WHERE part_dt BETWEEN '2012-01-01' AND '2012-02-01' GROUP BY part_dt"
 03,n,"SELECT OPS_USER_ID, COUNT(*) FROM kylin_sales WHERE part_dt BETWEEN '2012-01-01' AND '2012-02-01' GROUP BY OPS_USER_ID"
