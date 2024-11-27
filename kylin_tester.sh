@@ -36,6 +36,7 @@ DEF_JMETER_SCRIPT="scripts/kylin-http-stress-template.jmx"
 JMETER_SCRIPT=$DEF_JMETER_SCRIPT
 DEF_SQL_CSV_FILE="scripts/kylin-query-sqls.csv"
 SQL_CSV_FILE=$DEF_SQL_CSV_FILE
+QUERY_SQLS=0
 REPORT_OUTPUT_NAME=""
 REPORT_OUTPUT_ROOT="report/"
 REPORT_OUTPUT_DIR=""
@@ -61,7 +62,7 @@ if [ ! -f $JMETER_BIN ]; then
 fi
 
 # 检查工具是否已安装
-NEED_TOOLS=("ps" "java" "netstat" "hostname" "wc")
+NEED_TOOLS=("ps" "java" "netstat" "hostname" "wc" "awk")
 
 for tool in "${NEED_TOOLS[@]}"; do
   if ! command -v $tool &> /dev/null; then
@@ -165,12 +166,25 @@ function checkFileExists() {
   fi
 }
 
+# 统计测试SQL语句的数量
+function querySQLCount() {
+  # 强制给文件末尾加上换行符
+  sed -i -e '$a\' $SQL_CSV_FILE
+  QUERY_SQLS=$(awk 'NR>1' "$SQL_CSV_FILE" | wc -l)
+  if [ $? -ne 0 ]; then
+    echo -e "\033[31m无法获取 $SQL_CSV_FILE 中测试SQL语句条数，请检查文件内容是否为空或有可读权限。\033[0m"
+    exit 1
+  fi
+}
+
 # 检查JMeter测试必要的参数
 function checkArgs() {
 
   checkFileExists $CONF_FILE $DEF_CONF_FILE "Kylin配置参数文件"
   checkFileExists $JMETER_SCRIPT $DEF_JMETER_SCRIPT "JMeter测试脚本"
   checkFileExists $SQL_CSV_FILE $DEF_SQL_CSV_FILE "SQL文件"
+
+  querySQLCount
 
   # 根据时间生成报告名称
   if [ -z "$REPORT_OUTPUT_NAME" ]; then
@@ -208,6 +222,8 @@ function checkArgs() {
   echo -e "测试报告输出：\033[36m $REPORT_OUTPUT_DIR \033[0m"
   echo -e "测试日志文件：\033[36m $REPORT_OUTPUT_LOG \033[0m"
   echo -e "测试记录文件：\033[36m $REPORT_OUTPUT_JTL \033[0m"
+  echo -e " 测试SQL数量：\033[36m $QUERY_SQLS \033[0m"
+  echo -e "并发用户数为：\033[36m $USERS \033[0m"
 }
 
 # 替换JMeter的设置
@@ -230,22 +246,13 @@ function replaceSets() {
 
   # 根据不同测试方式设置参数
   if [ $LOOP_COUNT -eq -1 ]; then
-    echo "持续时长为：${DURATION_TIME}s"
+    echo -e "  持续时长为：\033[36m ${DURATION_TIME}s\033[0m"
     sed -i '/<boolProp name="ThreadGroup.scheduler">false<\/boolProp>/s/false/true/g' $JMETER_SCRIPT
   else
-    echo "循环次数为：$LOOP_COUNT"
+    echo -e "  循环次数为：\033[36m ${LOOP_COUNT}\033[0m"
     sed -i '/<boolProp name="ThreadGroup.scheduler">true<\/boolProp>/s/true/false/g' $JMETER_SCRIPT
-
-    # 只有启用循环次数时，才去获取测试SQL文件内容的行数
-    sed -i -e '$a\' $SQL_CSV_FILE
-    QUERY_SQLS=$(awk 'NR>1' "$SQL_CSV_FILE" | wc -l)
-    if [ $? -ne 0 ]; then
-      echo -e "\033[31m无法获取 $SQL_CSV_FILE 中测试SQL语句条数，请检查文件内容是否为空或有可读权限。\033[0m"
-      exit 1
-    fi
     LOOP_COUNT=$((LOOP_COUNT * QUERY_SQLS))
   fi
-
 }
 
 # BASE64算法加密
@@ -269,7 +276,6 @@ function encryptB64 () {
 # 提交测试任务
 function start() {
   
-  echo "并发用户数为：$USERS"
   nohup $JMETER_BIN \
     -Jsqlfile=$ROOT"/"$SQL_CSV_FILE \
     -Jhost=$KYLIN_HOST \
@@ -297,8 +303,8 @@ function start() {
     kill -9 $PID
   fi
   
-  echo -e "\033[32m测试任务已完成\033[0m"
-  echo "请打开查看测试报告：http://${REPORT_SERVER_IP}:${REPORT_SERVER_PORT}/${REPORT_OUTPUT_NAME}/index.html"
+  echo -e "\033[32m此次性能压力测试任务已完成!\033[0m"
+  echo -e "请打开查看测试报告：\033[32mhttp://${REPORT_SERVER_IP}:${REPORT_SERVER_PORT}/${REPORT_OUTPUT_NAME}/index.html\033[0m"
 
 }
 
