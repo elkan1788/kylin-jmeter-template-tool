@@ -32,13 +32,12 @@
 
 上述的目录和文件中，只有 `kylin_tester.sh`、`conf.ini`和 `scripts`三部分是本压测工具的文件，其余的文件均为 `Apache JMeter`的文件，无需修改。这三部分文件的内容说明如下：
 
-
-| 文件名称                               | 功能说明                                                                                                                                                                                                                   |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| kylin_tester.sh                        | 压测主程序脚本及测试执行脚本，可灵活地按不同压测场景需求调整入参，记录测试结果                                                                                                                                             |
-| conf.ini                               | 测试相关参数配置，如Kylin服务地址，端口，用户密码，项目等                                                                                                                                                                  |
-| scripts/kylin-http-stress-template.jmx | JMeter测试脚本，用于记录Kylin参数，测试内容，报告形式等基础配置信息                                                                                                                                                        |
-| scripts/kylin-query-sqls.csv           | 测试SQL的CSV文件，需要使用UTF8格式编码，建议使用Unix格式保存，文件内容主要包含有如下3个列（请保留表头）：<br/>1.query_no：测试SQL语句的序号，便于排查问题和统计分析 <br/>2.is_complex：是否复杂SQL，可选值：y和n，用来规避复杂查询影响 <br/>3.query_sql：具体的查询SQL语句，使用双引号包围住 |
+| 文件名称                               | 功能说明                                                                                                                                                                                                                                                                                     |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| kylin_tester.sh                        | 压测主程序脚本及测试执行脚本，可灵活地按不同压测场景需求调整入参，记录测试结果                                                                                                                                                                                                               |
+| conf.ini                               | 测试相关参数配置，如Kylin服务地址，端口，用户密码，项目等                                                                                                                                                                                                                                    |
+| scripts/kylin-http-stress-template.jmx | JMeter测试脚本，用于记录Kylin参数，测试内容，报告形式等基础配置信息                                                                                                                                                                                                                          |
+| scripts/kylin-query-sqls.csv           | 测试SQL的CSV文件，需要使用UTF8格式编码，建议使用Unix格式保存，文件内容主要包含有如下3个列（请保留表头）：1.query_no：测试SQL语句的序号，便于排查问题和统计分析 2.is_complex：是否复杂SQL，可选值：y和n，用来规避复杂查询影响 3.query_sql：具体的查询SQL语句，使用双引号包围住 |
 
 ## 参数说明
 
@@ -67,23 +66,29 @@ JMeter压测工具的安装目录为：/root/software/apache-jmeter-5.6.3
 
 ## 命令参考
 
-- **场景1：** 并发10个用户，持续10分钟，不使用复杂SQL
+- **场景1：** 并发10个用户，持续1分钟，不使用复杂SQL
 
 ```shell
-./kylin_tester.sh -u 10 -d 600 -c 0
+./kylin_tester.sh -u 10 -d 60 -c 0
 ```
+
+![screenshot-01.png](screenshot/screenshot-01.png)
 
 - **场景2：** 自定义SQL语句，复杂SQL比例20%
 
 ```shell
-./kylin_tester.sh -q ./scripts/kylin-query-sqls-custom.csv -c 20
+./kylin_tester.sh -q ./scripts/kylin-custom-query-sqls.csv -c 20
 ```
+
+![screenshot-02.png](screenshot/screenshot-02.png)
 
 - **场景3：** 开启Debug模式
 
 ```shell
 ./kylin_tester.sh -b true
 ```
+
+![screenshot-03.png](screenshot/screenshot-03.png)
 
 > 注：此模式只支持Kylin5.0+或是企业版本，建议在调试阶段开启Debug模式，通过Kylin查询响应的`code`信息判断是否有正确响应查询请求。
 
@@ -92,6 +97,8 @@ JMeter压测工具的安装目录为：/root/software/apache-jmeter-5.6.3
 ```shell
 ./kylin_tester.sh -e "ADMIN:KYLIN"
 ```
+
+![screenshot-04.png](screenshot/screenshot-04.png)
 
 ## 报告信息
 
@@ -110,4 +117,7 @@ apache-jmeter-5.6.3/report/
 ./kylin_tester.sh -w start
 ```
 
+![screenshot-05.png](screenshot/screenshot-05.png)
+
 > 注：做完压测或是查看好报告后，千切要记得关闭简易WEB服务。
+
